@@ -67,15 +67,15 @@ class Sphere {
 
     sf::Vector3f worldSpacePosition;
     float radius;
-    sf::Color surfaceColor;
+    Material surfaceMaterial;
 
     Sphere() = default;
 
-    Sphere(sf::Vector3f wsPos, float r, sf::Color color){
+    Sphere(sf::Vector3f wsPos, float r, Material material){
 
         worldSpacePosition = wsPos;
         radius = r;
-        surfaceColor = color;
+        surfaceMaterial = material;
 
     }
 
@@ -382,7 +382,7 @@ sf::Color CastRay(int x, int y, World world) {
 
     }
 
-    color = rayCastHit.sphere.surfaceColor;
+    color = rayCastHit.sphere.surfaceMaterial.materialColor;
 
     return ApplyFactorToColor(color, CastLightRay(rayCastHit.hitPosition, world, rayCastHit.hitNormal));
  
@@ -405,13 +405,13 @@ int main(){
 
     bool finished = false; 
 
-    
-    world.MakeSphere(Sphere(sf::Vector3f(-1, -1, 6), 1.3f, sf::Color(180, 20, 220)));
-    world.MakeSphere(Sphere(sf::Vector3f(-1, 2, 5), 1.4f, sf::Color(20, 20, 220)));
-    world.MakeSphere(Sphere(sf::Vector3f(-3, 0, 7), 3.f, sf::Color(20, 220, 20)));
-    world.MakeSphere(Sphere(sf::Vector3f(1, -1, 6), 1.3f, sf::Color(180, 20, 220)));
-    world.MakeSphere(Sphere(sf::Vector3f(1, 2, 6), 1.4f, sf::Color(20, 20, 220)));
-    world.MakeSphere(Sphere(sf::Vector3f(3, 0, 7), 3.f, sf::Color(20, 220, 20)));
+
+    world.MakeSphere(Sphere(sf::Vector3f(-1, -1, 6), 1.3f, MatteMaterial(sf::Color(180, 20, 220)))); 
+    world.MakeSphere(Sphere(sf::Vector3f(-1, 2, 5), 1.4f, MatteMaterial(sf::Color(20, 20, 220))));
+    world.MakeSphere(Sphere(sf::Vector3f(-3, 0, 7), 3.f, MatteMaterial(sf::Color(20, 220, 20))));
+    world.MakeSphere(Sphere(sf::Vector3f(1, -1, 6), 1.3f, MatteMaterial(sf::Color(180, 20, 220))));
+    world.MakeSphere(Sphere(sf::Vector3f(1, 2, 6), 1.4f, MatteMaterial(sf::Color(20, 20, 220))));
+    world.MakeSphere(Sphere(sf::Vector3f(3, 0, 7), 3.f, MatteMaterial(sf::Color(20, 220, 20))));
 
     world.MakeLight(Light(sf::Vector3f(-4, -5, 6), sf::Color(255, 255, 255), 20.f));
     world.MakeLight(Light(sf::Vector3f(8, -3, 2), sf::Color(255, 255, 255), 20.f));
