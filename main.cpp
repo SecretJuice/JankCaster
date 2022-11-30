@@ -110,9 +110,9 @@ class Light {
 class Options {
 
     public: 
-    sf::Vector2i screenResolution = sf::Vector2i(600, 400);
-    sf::Color skyColor = sf::Color(0, 0, 0);
-    sf::Color floorColor = sf::Color(200, 200, 200);
+    sf::Vector2i screenResolution = sf::Vector2i(1200, 800);
+    sf::Color skyColor = sf::Color(180, 180, 255);
+    sf::Color floorColor = sf::Color(255, 100, 100);
     float floorDepth = 3.f;
     int maxReflections = 3;
     float ambientLightMultiplier = 0.05f;
@@ -216,6 +216,25 @@ float GetDotProduct(sf::Vector3f v1, sf::Vector3f v2){
 
     float dotProduct = (v1.x * v2.x) + (v1.y * v2.y) + (v1.z * v2.z);
     return dotProduct;
+
+}
+
+sf::Color AverageColors(sf::Color c1, sf::Color c2, float c2Weight){
+
+    int colorInts1 [3] = {c1.r, c1.g, c1.b};
+    int colorInts2 [3] = {c2.r, c2.g, c2.b};
+
+    colorInts1[0] = ((colorInts1[0] * c2Weight) + colorInts2[0]) / 2;
+    colorInts1[1] = ((colorInts1[1] * c2Weight) + colorInts2[1]) / 2;
+    colorInts1[2] = ((colorInts1[2] * c2Weight) + colorInts2[2]) / 2;
+
+    for (int k = 0; k < 3; k++)
+    {
+        if (colorInts1[k] < 0){ colorInts1[k] = 0;}
+        if (colorInts1[k] > 255){ colorInts1[k] = 255;} 
+    }
+
+    return sf::Color(colorInts1[0], colorInts1[1], colorInts1[2]);
 
 }
 
@@ -397,17 +416,56 @@ sf::Color CastRay(int x, int y, World world) {
         return ApplyFactorToColor(color, CastLightRay(rayCastHit.hitPosition, world, rayCastHit.hitNormal));
         break;
     case Reflective:
-        color = rayCastHit.sphere.surfaceMaterial.materialColor;
+        {
+            Material material = rayCastHit.sphere.surfaceMaterial;
+            color = material.materialColor;
 
+            sf::Vector3f reflection = (-2 * GetDotProduct(rayDir, rayCastHit.hitNormal) * rayCastHit.hitNormal) + rayDir;
 
-        return ApplyFactorToColor(color, CastLightRay(rayCastHit.hitPosition, world, rayCastHit.hitNormal));
-        break;
+            sf::Vector3f newStartPos = rayCastHit.hitPosition + (rayCastHit.hitNormal * 0.01f);
+
+            Hit reflectionHit = DoRayCast(newStartPos, reflection, maxDistance, world);
+
+            sf::Color reflectionColor;
+
+            if (reflectionHit.hitNothing){
+                reflectionColor = world.options.skyColor;
+                reflectionColor = AverageColors(reflectionColor, ApplyFactorToColor(color, CastLightRay(rayCastHit.hitPosition, world, rayCastHit.hitNormal)), 0.1f);
+                return reflectionColor;
+            }
+            if (reflectionHit.hitFloor){
+                reflectionColor = world.options.floorColor;
+                reflectionColor = AverageColors(ApplyFactorToColor(reflectionColor, CastLightRay(reflectionHit.hitPosition, world, reflectionHit.hitNormal)),
+                                  ApplyFactorToColor(color, CastLightRay(rayCastHit.hitPosition, world, rayCastHit.hitNormal)), 0.1f);
+                return reflectionColor;
+            }
+
+            if (!(reflectionHit.hitNothing || reflectionHit.hitFloor)){
+                reflectionColor = reflectionHit.sphere.surfaceMaterial.materialColor;
+
+                reflectionColor = AverageColors(ApplyFactorToColor(reflectionColor, CastLightRay(reflectionHit.hitPosition, world, reflectionHit.hitNormal)),
+                                  ApplyFactorToColor(color, CastLightRay(rayCastHit.hitPosition, world, rayCastHit.hitNormal)), 0.1f);
+                return reflectionColor;
+            }
+
+            return reflectionColor;
+            break;
+        }
+        
+
     case Transparent:
+
         color = rayCastHit.sphere.surfaceMaterial.materialColor;
 
         return ApplyFactorToColor(color, CastLightRay(rayCastHit.hitPosition, world, rayCastHit.hitNormal));
         break;
 
+    
+    // default:
+    // color = rayCastHit.sphere.surfaceMaterial.materialColor;
+
+    //     return ApplyFactorToColor(color, CastLightRay(rayCastHit.hitPosition, world, rayCastHit.hitNormal));
+    //     break;
     }
 }
 
@@ -426,17 +484,19 @@ int main(){
 
     bool finished = false; 
 
+    std::cout << GetDotProduct(sf::Vector3f(0.83205f, 0.554701f, 0), sf::Vector3f(0, -1, 0)) << ": Dot Product";
 
-    // world.MakeSphere(Sphere(sf::Vector3f(-1, -1, 6), 1.3f, MatteMaterial(sf::Color(180, 20, 220)))); 
-    // world.MakeSphere(Sphere(sf::Vector3f(-1, 2, 5), 1.4f, MatteMaterial(sf::Color(20, 20, 220))));
-    // world.MakeSphere(Sphere(sf::Vector3f(-3, 0, 7), 3.f, MatteMaterial(sf::Color(20, 220, 20))));
+
+    world.MakeSphere(Sphere(sf::Vector3f(-1, -1, 1), 1.3f, MatteMaterial(sf::Color(180, 20, 220)))); 
+    world.MakeSphere(Sphere(sf::Vector3f(-1, 2, 3), 1.4f, MatteMaterial(sf::Color(20, 20, 220))));
+    world.MakeSphere(Sphere(sf::Vector3f(-3, 0, 7), 3.f, MatteMaterial(sf::Color(20, 220, 20))));
     world.MakeSphere(Sphere(sf::Vector3f(1, -1, 6), 1.3f, TransparentMaterial(sf::Color(180, 20, 220), 1.f, 1.1f, 0.2f)));
-    world.MakeSphere(Sphere(sf::Vector3f(1, 2, 6), 1.4f, ReflectiveMaterial(sf::Color(20, 20, 220), 1.f)));
+    world.MakeSphere(Sphere(sf::Vector3f(0, 0, 5), 1.4f, ReflectiveMaterial(sf::Color(20, 20, 220), 1.f)));
     world.MakeSphere(Sphere(sf::Vector3f(3, 0, 7), 3.f, MatteMaterial(sf::Color(20, 220, 20))));
 
     world.MakeLight(Light(sf::Vector3f(-4, -5, 6), sf::Color(255, 255, 255), 20.f));
     world.MakeLight(Light(sf::Vector3f(8, -3, 2), sf::Color(255, 255, 255), 20.f));
-    //world.MakeLight(Light(sf::Vector3f(0, -3, -4), sf::Color(255, 255, 255), 20.f));
+    world.MakeLight(Light(sf::Vector3f(0, -3, -4), sf::Color(255, 255, 255), 20.f));
 
     // world.MakeSphere(Sphere(sf::Vector3f(0, 0, 5), 2.f, sf::Color(255, 255, 255)));
     // world.MakeLight(Light(sf::Vector3f(30, 0, 5), sf::Color(255, 255, 255), 20.f));
