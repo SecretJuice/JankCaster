@@ -6,7 +6,7 @@
 
 enum MaterialType{
 
-    Matte, Reflective, Transparent
+    Matte = 0, Reflective = 1, Transparent = 2
 
 };
 
@@ -21,9 +21,13 @@ class Material{
 class MatteMaterial: public Material {
 
     public:
-    MatteMaterial(sf::Color matColor){
+
+    //materialType = Matte;
+
+    MatteMaterial(sf::Color matColor) :Material{} {
         materialColor = matColor;
-        MaterialType materialType = Matte;
+        materialType = Matte;
+        
     }
 
 };
@@ -33,13 +37,14 @@ class ReflectiveMaterial: public Material {
     public:
 
     float materialSmoothness;
+    
 
     ReflectiveMaterial() = default;
 
-    ReflectiveMaterial(sf::Color matColor, float smoothness){
+    ReflectiveMaterial(sf::Color matColor, float smoothness):Material{}{
         materialColor = matColor;
-        MaterialType materialType = Reflective;
         materialSmoothness = smoothness;
+        materialType = Reflective;
     }
 
 };
@@ -50,13 +55,15 @@ class TransparentMaterial: public ReflectiveMaterial {
 
     float refractionIndex;
     float materialOpacity;
+    
 
     TransparentMaterial(sf::Color matColor, float smoothness, float rIndex, float opacity){
         materialColor = matColor;
-        MaterialType materialType = Transparent;
+        
         materialSmoothness = smoothness;
         refractionIndex = rIndex;
         materialOpacity = opacity;
+        materialType = Transparent;
     }
 
 };
@@ -382,13 +389,27 @@ sf::Color CastRay(int x, int y, World world) {
 
     }
 
-    color = rayCastHit.sphere.surfaceMaterial.materialColor;
+    switch (rayCastHit.sphere.surfaceMaterial.materialType)
+    {
+    case Matte:
+        color = rayCastHit.sphere.surfaceMaterial.materialColor;
 
-    return ApplyFactorToColor(color, CastLightRay(rayCastHit.hitPosition, world, rayCastHit.hitNormal));
- 
+        return ApplyFactorToColor(color, CastLightRay(rayCastHit.hitPosition, world, rayCastHit.hitNormal));
+        break;
+    case Reflective:
+        color = rayCastHit.sphere.surfaceMaterial.materialColor;
 
+
+        return ApplyFactorToColor(color, CastLightRay(rayCastHit.hitPosition, world, rayCastHit.hitNormal));
+        break;
+    case Transparent:
+        color = rayCastHit.sphere.surfaceMaterial.materialColor;
+
+        return ApplyFactorToColor(color, CastLightRay(rayCastHit.hitPosition, world, rayCastHit.hitNormal));
+        break;
+
+    }
 }
-
 
 int main(){
 
@@ -406,11 +427,11 @@ int main(){
     bool finished = false; 
 
 
-    world.MakeSphere(Sphere(sf::Vector3f(-1, -1, 6), 1.3f, MatteMaterial(sf::Color(180, 20, 220)))); 
-    world.MakeSphere(Sphere(sf::Vector3f(-1, 2, 5), 1.4f, MatteMaterial(sf::Color(20, 20, 220))));
-    world.MakeSphere(Sphere(sf::Vector3f(-3, 0, 7), 3.f, MatteMaterial(sf::Color(20, 220, 20))));
-    world.MakeSphere(Sphere(sf::Vector3f(1, -1, 6), 1.3f, MatteMaterial(sf::Color(180, 20, 220))));
-    world.MakeSphere(Sphere(sf::Vector3f(1, 2, 6), 1.4f, MatteMaterial(sf::Color(20, 20, 220))));
+    // world.MakeSphere(Sphere(sf::Vector3f(-1, -1, 6), 1.3f, MatteMaterial(sf::Color(180, 20, 220)))); 
+    // world.MakeSphere(Sphere(sf::Vector3f(-1, 2, 5), 1.4f, MatteMaterial(sf::Color(20, 20, 220))));
+    // world.MakeSphere(Sphere(sf::Vector3f(-3, 0, 7), 3.f, MatteMaterial(sf::Color(20, 220, 20))));
+    world.MakeSphere(Sphere(sf::Vector3f(1, -1, 6), 1.3f, TransparentMaterial(sf::Color(180, 20, 220), 1.f, 1.1f, 0.2f)));
+    world.MakeSphere(Sphere(sf::Vector3f(1, 2, 6), 1.4f, ReflectiveMaterial(sf::Color(20, 20, 220), 1.f)));
     world.MakeSphere(Sphere(sf::Vector3f(3, 0, 7), 3.f, MatteMaterial(sf::Color(20, 220, 20))));
 
     world.MakeLight(Light(sf::Vector3f(-4, -5, 6), sf::Color(255, 255, 255), 20.f));
