@@ -4,6 +4,63 @@
 #include <list>
 #include <chrono>
 
+enum MaterialType{
+
+    Matte, Reflective, Transparent
+
+};
+
+class Material{
+
+    public:
+    sf::Color materialColor;
+    MaterialType materialType;
+
+};
+
+class MatteMaterial: public Material {
+
+    public:
+    MatteMaterial(sf::Color matColor){
+        materialColor = matColor;
+        MaterialType materialType = Matte;
+    }
+
+};
+
+class ReflectiveMaterial: public Material {
+
+    public:
+
+    float materialSmoothness;
+
+    ReflectiveMaterial() = default;
+
+    ReflectiveMaterial(sf::Color matColor, float smoothness){
+        materialColor = matColor;
+        MaterialType materialType = Reflective;
+        materialSmoothness = smoothness;
+    }
+
+};
+
+class TransparentMaterial: public ReflectiveMaterial {
+
+    public:
+
+    float refractionIndex;
+    float materialOpacity;
+
+    TransparentMaterial(sf::Color matColor, float smoothness, float rIndex, float opacity){
+        materialColor = matColor;
+        MaterialType materialType = Transparent;
+        materialSmoothness = smoothness;
+        refractionIndex = rIndex;
+        materialOpacity = opacity;
+    }
+
+};
+
 class Sphere {
 
     public:
