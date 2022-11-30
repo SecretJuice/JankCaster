@@ -110,9 +110,9 @@ class Light {
 class Options {
 
     public: 
-    sf::Vector2i screenResolution = sf::Vector2i(1200, 800);
-    sf::Color skyColor = sf::Color(180, 180, 255);
-    sf::Color floorColor = sf::Color(255, 100, 100);
+    sf::Vector2i screenResolution = sf::Vector2i(600, 400);
+    sf::Color skyColor = sf::Color(255, 255, 255);
+    sf::Color floorColor = sf::Color(50, 50, 50);
     float floorDepth = 3.f;
     int maxReflections = 3;
     float ambientLightMultiplier = 0.05f;
@@ -219,14 +219,16 @@ float GetDotProduct(sf::Vector3f v1, sf::Vector3f v2){
 
 }
 
-sf::Color AverageColors(sf::Color c1, sf::Color c2, float c2Weight){
+sf::Color AddWeightedColors(sf::Color c1, sf::Color c2, float c1Weight){
 
     int colorInts1 [3] = {c1.r, c1.g, c1.b};
     int colorInts2 [3] = {c2.r, c2.g, c2.b};
 
-    colorInts1[0] = ((colorInts1[0] * c2Weight) + colorInts2[0]) / 2;
-    colorInts1[1] = ((colorInts1[1] * c2Weight) + colorInts2[1]) / 2;
-    colorInts1[2] = ((colorInts1[2] * c2Weight) + colorInts2[2]) / 2;
+    float c2Weight = 1 - c1Weight;
+
+    colorInts1[0] = (colorInts2[0] * c2Weight) + (colorInts1[0] * c1Weight);
+    colorInts1[1] = (colorInts2[1] * c2Weight) + (colorInts1[1] * c1Weight);
+    colorInts1[2] = (colorInts2[2] * c2Weight) + (colorInts1[2] * c1Weight);
 
     for (int k = 0; k < 3; k++)
     {
@@ -430,21 +432,21 @@ sf::Color CastRay(int x, int y, World world) {
 
             if (reflectionHit.hitNothing){
                 reflectionColor = world.options.skyColor;
-                reflectionColor = AverageColors(reflectionColor, ApplyFactorToColor(color, CastLightRay(rayCastHit.hitPosition, world, rayCastHit.hitNormal)), 0.1f);
+                reflectionColor = AddWeightedColors(reflectionColor, ApplyFactorToColor(color, CastLightRay(rayCastHit.hitPosition, world, rayCastHit.hitNormal)), 0.25f);
                 return reflectionColor;
             }
             if (reflectionHit.hitFloor){
                 reflectionColor = world.options.floorColor;
-                reflectionColor = AverageColors(ApplyFactorToColor(reflectionColor, CastLightRay(reflectionHit.hitPosition, world, reflectionHit.hitNormal)),
-                                  ApplyFactorToColor(color, CastLightRay(rayCastHit.hitPosition, world, rayCastHit.hitNormal)), 0.1f);
+                reflectionColor = AddWeightedColors(ApplyFactorToColor(reflectionColor, CastLightRay(reflectionHit.hitPosition, world, reflectionHit.hitNormal)),
+                                  ApplyFactorToColor(color, CastLightRay(rayCastHit.hitPosition, world, rayCastHit.hitNormal)), 0.25f);
                 return reflectionColor;
             }
 
             if (!(reflectionHit.hitNothing || reflectionHit.hitFloor)){
                 reflectionColor = reflectionHit.sphere.surfaceMaterial.materialColor;
 
-                reflectionColor = AverageColors(ApplyFactorToColor(reflectionColor, CastLightRay(reflectionHit.hitPosition, world, reflectionHit.hitNormal)),
-                                  ApplyFactorToColor(color, CastLightRay(rayCastHit.hitPosition, world, rayCastHit.hitNormal)), 0.1f);
+                reflectionColor = AddWeightedColors(ApplyFactorToColor(reflectionColor, CastLightRay(reflectionHit.hitPosition, world, reflectionHit.hitNormal)),
+                                  ApplyFactorToColor(color, CastLightRay(rayCastHit.hitPosition, world, rayCastHit.hitNormal)), 0.25f);
                 return reflectionColor;
             }
 
