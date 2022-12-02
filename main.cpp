@@ -486,8 +486,10 @@ int main(){
 
     bool finished = false; 
 
-    std::cout << GetDotProduct(sf::Vector3f(0.83205f, 0.554701f, 0), sf::Vector3f(0, -1, 0)) << ": Dot Product";
+    // std::cout << GetDotProduct(sf::Vector3f(0.83205f, 0.554701f, 0), sf::Vector3f(0, -1, 0)) << ": Dot Product";
 
+    int totalPixels =  xResolution * yResolution;
+    int currentPixel = 0;
 
     world.MakeSphere(Sphere(sf::Vector3f(-1, -1, 1), 1.3f, MatteMaterial(sf::Color(180, 20, 220)))); 
     world.MakeSphere(Sphere(sf::Vector3f(-1, 2, 3), 1.4f, MatteMaterial(sf::Color(20, 20, 220))));
@@ -503,7 +505,7 @@ int main(){
     // world.MakeSphere(Sphere(sf::Vector3f(0, 0, 5), 2.f, sf::Color(255, 255, 255)));
     // world.MakeLight(Light(sf::Vector3f(30, 0, 5), sf::Color(255, 255, 255), 20.f));
 
-    std::cout << world.lights.size();
+    // std::cout << world.lights.size();
 
 
     while (window.isOpen())
@@ -531,7 +533,12 @@ int main(){
                     shape.setFillColor(CastRay(i, j, world));
 
                     window.draw(shape);
+
+                    currentPixel++;
+
+                    
                 }
+                std::cout << currentPixel << " / " << totalPixels << ": %" << ((float)currentPixel / (float)totalPixels) * 100.f << "\r";
                 
             }
 
@@ -540,7 +547,7 @@ int main(){
 
             auto end = std::chrono::high_resolution_clock::now();
 
-            std::cout << "Finished the thing, in " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << std::endl;
+            std::cout << "Finished in " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " milliseconds" <<std::endl;
 
         }
     
